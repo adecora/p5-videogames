@@ -7,16 +7,37 @@ new p5((sketch) => {
     // We made sketch available global to developer purpose only
     window.sketch = sketch;
 
+
+    function readRandom(obj) {
+        let len = obj.length;
+        return obj[sketch.floor(sketch.random(len))];
+    }
+
     let song, fft;
-    let canvasSize = {
+    const canvasSize = {
         w: 1200,
         h: 800
     };
+
+    const colors = [
+        [125, 0, 0],
+        [0, 125, 0],
+        [0, 0, 125]
+    ];
+
+    let color = readRandom(colors);
+
+    const canvasBackground = [
+        [0, 0, canvasSize.w / 3, canvasSize.h ],
+        [canvasSize.w / 3, 0, canvasSize.w / 3 * 2, canvasSize.h ],
+        [canvasSize.w / 3 * 2, 0, canvasSize.w, canvasSize.h ]
+    ];
 
 
     sketch.preload = () => {
         console.log("PRELOAD");
         song = sketch.loadSound("assets/videogame1.mp3");
+        // song = sketch.loadSound("assets/videogame2.mp3");
     };
 
     sketch.setup = () => {
@@ -29,32 +50,59 @@ new p5((sketch) => {
         window.spectrum = fft.analyze();
         window.waveform = fft.waveform();
 
-        song.setVolume(1);
+        song.setVolume(0.5);
     };
+
+    // Math.floor(Math.random() * 3)
 
     sketch.draw = () => {
         sketch.background(220);
 
         let spectrum = fft.analyze();
 
+        
+
+        let getEnergies = [
+            sketch.map(fft.getEnergy("bass"), 0, 255, 0, 1.5),
+            sketch.map(fft.getEnergy("mid"), 0, 255, 0, 1.5),
+            (sketch.map(fft.getEnergy("treble"), 0, 255, 0, 1.5) + 1) * 10,
+        ];
+        
+        //console.table(getEnergies);
+
+        canvasBackground.forEach(([x, y, w, h], idx) => {
+            sketch.push();
+            sketch.noStroke();
+            sketch.fill([...color.map((el) => el * getEnergies[idx]), 100]);
+            sketch.rect(x, y, w, h);
+            sketch.pop();
+        });
+
+
         // sketch.rect(0, 0, 100, 500);
         // sketch.rect(100, canvasSize.h - 500, 100, 500);
         // sketch.rect(200, canvasSize.h, 100, -500);
         
-        sketch.noStroke();
-        sketch.fill(255, 0, 255);
 
-        
-        for(let i = 0; i < spectrum.length; i++) {
-            let x = sketch.map(i, 0, spectrum.length, 0, canvasSize.h)
-            let y = sketch.map(spectrum[i], 0, 255, canvasSize.h, 0);
-            let rec = {
-                w: canvasSize.w / spectrum.length,
-                h: -sketch.map(spectrum[i], 0, 255, 0, canvasSize.h)
-            };
 
-            sketch.rect(x, canvasSize.h, rec.w, rec.h);
-        }
+
+
+
+
+                    // sketch.noStroke();
+                    // sketch.fill(255, 0, 255);
+
+                    
+                    // for(let i = 0; i < spectrum.length * 0.4; i++) {
+                    //     let x = sketch.map(i, 0, spectrum.length * 0.4, 0, canvasSize.w)
+                    //     let y = sketch.map(spectrum[i], 0, 255, canvasSize.h, 0);
+                    //     let rec = {
+                    //         w: canvasSize.w / (spectrum.length * 0.4),
+                    //         h: -sketch.map(spectrum[i], 0, 255, 0, canvasSize.h)
+                    //     };
+
+                    //     sketch.rect(x, canvasSize.h, rec.w, rec.h);
+                    // }
 
         // sketch.noStroke();
         // sketch.fill(255, 0, 255);
